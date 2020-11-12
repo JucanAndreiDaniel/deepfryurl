@@ -6,7 +6,6 @@ import urllib.error
 from sys import stdout
 from urllib.request import urlopen
 
-import cv2
 import numpy as np
 import progressbar
 from PIL import Image

@@ -11,6 +11,5 @@ setup(
     install_requires=['pillow',
                       'numpy',
                       'progressbar',
-                      'numpy',
-                      'opencv-python']
+                      'numpy',]
     )
