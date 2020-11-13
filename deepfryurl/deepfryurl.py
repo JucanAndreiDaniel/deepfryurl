@@ -85,7 +85,7 @@ class dfu:
         return True
 
 
-    def change_contrast(img, level):
+    def change_contrast(self, img, level):
         factor = (259 * (level + 255)) / (255 * (259 - level))
 
         def contrast(c):
@@ -93,7 +93,7 @@ class dfu:
         return img.point(contrast)
 
 
-    def add_noise(img, factor):
+    def add_noise(self, img, factor):
         def noise(c):
             return c*(1+np.random.random(1)[0]*factor-factor/2)
         return img.point(noise)
