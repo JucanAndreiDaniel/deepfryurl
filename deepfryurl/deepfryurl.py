@@ -80,7 +80,7 @@ class dfu:
             img = await self.fry(img)
 
         print("Saving temporarily to disk for uploading...")
-        img.save('./images/tmp.jpg')
+        img.save('tmp.jpg')
         return True
 
     def change_contrast(self, img, level):
