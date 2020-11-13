@@ -1,1 +1,1 @@
-from . import deepfryurl
+from .deepfryurl import dfu

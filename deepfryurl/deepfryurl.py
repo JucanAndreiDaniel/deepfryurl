@@ -12,7 +12,7 @@ from PIL import Image
 
 # return the length of vector v
 
-class deepfryurl:
+class dfu:
     def __init__(self) -> None:
         pass
 
