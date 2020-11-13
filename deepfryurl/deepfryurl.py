@@ -24,7 +24,7 @@ class dfu:
         return v/self.length(v)
 
 
-    def download_to_ram(url):
+    def download_to_ram(self,url):
         # try to open url for n tries
         n = 10
         headers = {}
