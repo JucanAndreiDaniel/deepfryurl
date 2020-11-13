@@ -1,10 +1,7 @@
 import io
 import math
-import os
-import time
-import urllib.error
 from sys import stdout
-from urllib.request import urlopen
+import aiohttp
 
 import numpy as np
 import progressbar
@@ -27,28 +24,28 @@ class dfu:
 
     async def download_to_ram(self, url):
         # try to open url for n tries
-        n = 10
         headers = {}
         headers['User-Agent'] = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36"
-        for i in range(n):
-            try:
-                req = urllib.request.Request(url, headers=headers)
-                response = urllib.request.urlopen(req)
-                break
-            except urllib.error.HTTPError:
-                time.sleep(1)
-            except urllib.error.URLError:
-                time.sleep(1)
-        # save retrieved data to PIL image
-        img = None
         try:
-            img_bytes = response.read()
-            img = Image.open(io.BytesIO(img_bytes)).convert("RGB")
-        except OSError as e:
-            print("URL is not an image, skipping.\n")
-        except UnboundLocalError as e:
-            print(str(e))
-        return img
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, headers=headers) as resp:
+                    if resp.status == 200:
+                        content = await resp.read()
+                        try:
+                            img_bytes = content
+                            img = Image.open(io.BytesIO(
+                                img_bytes)).convert("RGB")
+                        except OSError as e:
+                            print("URL is not an image, skipping.\n")
+                        except UnboundLocalError as e:
+                            print(str(e))
+                        return img
+                    else:
+                        print(resp.status)
+                        return None
+        except Exception as e:
+            print("E: {}".format(e))
+        # save retrieved data to PIL image
 
     async def fry(self, img):
         # bulge at random coordinates
@@ -80,8 +77,8 @@ class dfu:
             img = await self.fry(img)
 
         print("Saving temporarily to disk for uploading...")
-        img.save('tmp.jpg')
-        return True
+        # img.save('./tmp.jpg')
+        return img
 
     def change_contrast(self, img, level):
         factor = (259 * (level + 255)) / (255 * (259 - level))
@@ -93,7 +90,7 @@ class dfu:
     def add_noise(self, img, factor):
         def noise(c):
             return c*(1+np.random.random(1)[0]*factor-factor/2)
-        return  img.point(noise)
+        return img.point(noise)
 
     # creates a bulge like distortion to the image
     # parameters:
