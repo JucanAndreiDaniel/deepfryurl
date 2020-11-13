@@ -16,7 +16,7 @@ class dfu:
     def __init__(self) -> None:
         pass
 
-    def length(v):
+    def length(self,v):
         return np.sqrt(np.sum(np.square(v)))
 
     # returns the unit vector in the direction of v
