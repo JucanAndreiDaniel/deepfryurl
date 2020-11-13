@@ -12,19 +12,20 @@ from PIL import Image
 
 # return the length of vector v
 
+
 class dfu:
     def __init__(self) -> None:
         pass
 
-    def length(self,v):
+    async def length(self, v):
         return np.sqrt(np.sum(np.square(v)))
 
     # returns the unit vector in the direction of v
-    def normalise(self,v):
-        return v/self.length(v)
+    async def normalise(self, v):
+        l = await self.length(v)
+        return v/l
 
-
-    def download_to_ram(self,url):
+    async def download_to_ram(self, url):
         # try to open url for n tries
         n = 10
         headers = {}
@@ -49,14 +50,13 @@ class dfu:
             print(str(e))
         return img
 
-
-    def fry(self,img):
+    async def fry(self, img):
         # bulge at random coordinates
         [w, h] = [img.width - 1, img.height - 1]
         w *= np.random.random(1)
         h *= np.random.random(1)
         r = int(((img.width + img.height) / 10) * (np.random.random(1)[0] + 1))
-        img = self.bulge(img, np.array([int(w), int(h)]), r, 3, 5, 1.8)
+        img = await self.bulge(img, np.array([int(w), int(h)]), r, 3, 5, 1.8)
 
         # some finishing touches
         #print("Adding some finishing touches... ", end='')
@@ -67,23 +67,21 @@ class dfu:
 
         return img
 
-
     # Downloads image from url to RAM, fries it and saves to disk
-    def fry_url(self,url, n):
+
+    async def fry_url(self, url, n):
         # download image and check if image was downloaded successfully
-        img = self.download_to_ram(url)
+        img = await self.download_to_ram(url)
         if img is None:
             return
 
         # fry image n times
         for i in range(n):
-            img = self.fry(img)
+            img = await self.fry(img)
 
         print("Saving temporarily to disk for uploading...")
-        home = os.path.expanduser('~')
-        img.save(home+'/supreme-pybot/images/tmp.jpg')
+        img.save('./images/tmp.jpg')
         return True
-
 
     def change_contrast(self, img, level):
         factor = (259 * (level + 255)) / (255 * (259 - level))
@@ -92,12 +90,10 @@ class dfu:
             return 128 + factor * (c - 128)
         return img.point(contrast)
 
-
     def add_noise(self, img, factor):
         def noise(c):
             return c*(1+np.random.random(1)[0]*factor-factor/2)
-        return img.point(noise)
-
+        return  img.point(noise)
 
     # creates a bulge like distortion to the image
     # parameters:
@@ -107,7 +103,7 @@ class dfu:
     #   a   = flatness of the bulge, 1 = spherical, > 1 increases flatness
     #   h   = height of the bulge
     #   ior = index of refraction of the bulge material
-    def bulge(self,img, f, r, a, h, ior):
+    async def bulge(self, img, f, r, a, h, ior):
         # print("Creating a bulge at ({0}, {1}) with radius {2}... ".format(f[0], f[1], r))
 
         # load image to numpy array
@@ -151,7 +147,7 @@ class dfu:
                 ray = np.array([x, y])
 
                 # find the magnitude of displacement in the xy plane between the ray and focus
-                s = self.length(ray - f)
+                s = await self.length(ray - f)
 
                 # if the ray is in the centre of the bulge or beyond the radius it doesn't need to be modified
                 if 0 < s < r:
@@ -170,7 +166,8 @@ class dfu:
                     k = (h+(math.sqrt(r**2-s**2)/a))/np.sin(phi)
 
                     # find intersection point
-                    intersect = ray + self.normalise(f-ray)*k
+                    normal = await self.normalise(f-ray)
+                    intersect = ray + normal*k
 
                     # assign pixel with ray's coordinates the colour of pixel at intersection
                     if 0 < intersect[0] < width-1 and 0 < intersect[1] < height-1:
