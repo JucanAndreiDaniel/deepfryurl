@@ -20,12 +20,14 @@ class dfu:
     # returns the unit vector in the direction of v
     async def normalise(self, v):
         l = await self.length(v)
-        return v/l
+        return v / l
 
     async def download_to_ram(self, url):
         # try to open url for n tries
         headers = {}
-        headers['User-Agent'] = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36"
+        headers[
+            "User-Agent"
+        ] = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36"
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(url, headers=headers) as resp:
@@ -56,11 +58,11 @@ class dfu:
         img = await self.bulge(img, np.array([int(w), int(h)]), r, 3, 5, 1.8)
 
         # some finishing touches
-        #print("Adding some finishing touches... ", end='')
+        # print("Adding some finishing touches... ", end='')
         stdout.flush()
         img = self.add_noise(img, 0.2)
         img = self.change_contrast(img, 175)
-        print("Done")
+        print("Fried once")
 
         return img
 
@@ -68,6 +70,7 @@ class dfu:
 
     async def fry_url(self, url, n):
         # download image and check if image was downloaded successfully
+        print("Started frying")
         img = await self.download_to_ram(url)
         if img is None:
             return
@@ -76,7 +79,7 @@ class dfu:
         for i in range(n):
             img = await self.fry(img)
 
-        print("Saving temporarily to disk for uploading...")
+        print("Done frying\n")
         # img.save('./tmp.jpg')
         return img
 
@@ -85,11 +88,13 @@ class dfu:
 
         def contrast(c):
             return 128 + factor * (c - 128)
+
         return img.point(contrast)
 
     def add_noise(self, img, factor):
         def noise(c):
-            return c*(1+np.random.random(1)[0]*factor-factor/2)
+            return c * (1 + np.random.random(1)[0] * factor - factor / 2)
+
         return img.point(noise)
 
     # creates a bulge like distortion to the image
@@ -109,7 +114,7 @@ class dfu:
         img_data = np.array(img)
 
         # ignore too large images
-        if width*height > 3000*3000:
+        if width * height > 3000 * 3000:
             return img
 
         # determine range of pixels to be checked (square enclosing bulge), max exclusive
@@ -149,25 +154,26 @@ class dfu:
                 # if the ray is in the centre of the bulge or beyond the radius it doesn't need to be modified
                 if 0 < s < r:
                     # slope of the bulge relative to xy plane at (x, y) of the ray
-                    m = -s/(a*math.sqrt(r**2-s**2))
+                    m = -s / (a * math.sqrt(r ** 2 - s ** 2))
 
                     # find the angle between the ray and the normal of the bulge
-                    theta = np.pi/2 + np.arctan(1/m)
+                    theta = np.pi / 2 + np.arctan(1 / m)
 
                     # find the magnitude of the angle between xy plane and refracted ray using snell's law
                     # s >= 0 -> m <= 0 -> arctan(-1/m) > 0, but ray is below xy plane so we want a negative angle
                     # arctan(-1/m) is therefore negated
-                    phi = np.abs(np.arctan(1/m) - np.arcsin(np.sin(theta)/ior))
+                    phi = np.abs(np.arctan(1 / m) -
+                                 np.arcsin(np.sin(theta) / ior))
 
                     # find length the ray travels in xy plane before hitting z=0
-                    k = (h+(math.sqrt(r**2-s**2)/a))/np.sin(phi)
+                    k = (h + (math.sqrt(r ** 2 - s ** 2) / a)) / np.sin(phi)
 
                     # find intersection point
-                    normal = await self.normalise(f-ray)
-                    intersect = ray + normal*k
+                    normal = await self.normalise(f - ray)
+                    intersect = ray + normal * k
 
                     # assign pixel with ray's coordinates the colour of pixel at intersection
-                    if 0 < intersect[0] < width-1 and 0 < intersect[1] < height-1:
+                    if 0 < intersect[0] < width - 1 and 0 < intersect[1] < height - 1:
                         bulged[y][x] = img_data[int(
                             intersect[1])][int(intersect[0])]
                     else:
