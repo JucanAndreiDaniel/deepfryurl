@@ -7,12 +7,13 @@ import numpy as np
 import progressbar
 from PIL import Image
 
-# return the length of vector v
-
 
 class dfu:
     def __init__(self) -> None:
         pass
+
+    async def resize(self, img, width, height=False):
+        return img.resize((width, int((width * img.height / img.width, height)[height])))
 
     async def length(self, v):
         return np.sqrt(np.sum(np.square(v)))
@@ -23,7 +24,6 @@ class dfu:
         return v / l
 
     async def download_to_ram(self, url):
-        # try to open url for n tries
         headers = {}
         headers[
             "User-Agent"
@@ -47,7 +47,6 @@ class dfu:
                         return None
         except Exception as e:
             print("E: {}".format(e))
-        # save retrieved data to PIL image
 
     async def fry(self, img):
         # bulge at random coordinates
@@ -66,21 +65,22 @@ class dfu:
 
         return img
 
-    # Downloads image from url to RAM, fries it and saves to disk
-
-    async def fry_url(self, url, n):
+    async def fry_url(self, url, n, width=False, height=False):
         # download image and check if image was downloaded successfully
         print("Started frying")
         img = await self.download_to_ram(url)
         if img is None:
             return
-
+        if width:
+            if not height:
+                img = await self.resize(img, width)
+            else:
+                img = await self.resize(img, width, height)
         # fry image n times
         for i in range(n):
             img = await self.fry(img)
 
         print("Done frying\n")
-        # img.save('./tmp.jpg')
         return img
 
     def change_contrast(self, img, level):
